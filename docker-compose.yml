@@ -1,0 +1,21 @@
+# cec-tools Docker Compose
+# 翻墙工具静态文件服务
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: cec-tools-nginx
+    restart: unless-stopped
+    ports:
+      - "8410:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./clash:/usr/share/nginx/html/clash:ro
+      - ./v2ray:/usr/share/nginx/html/v2ray:ro
+      - ./install.sh:/usr/share/nginx/html/tools/install.sh:ro
+    networks:
+      - cec-tools-network
+
+networks:
+  cec-tools-network:
+    name: cec-tools-network

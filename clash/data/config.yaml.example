@@ -1,0 +1,78 @@
+# Clash Meta 配置文件模板
+# 使用前请修改 proxies 部分，填入你的节点信息
+
+# 基础配置
+port: 7890              # HTTP 代理端口
+socks-port: 7891        # SOCKS5 代理端口
+allow-lan: true         # 允许局域网连接
+bind-address: "*"       # 绑定所有网络接口
+mode: rule              # 规则模式
+log-level: info         # 日志级别
+
+# TUN 模式配置（透明代理的关键）
+tun:
+  enable: true                    # 启用 TUN 模式
+  stack: system                   # 使用系统网络栈
+  auto-route: true                # 自动配置路由
+  auto-detect-interface: true     # 自动检测网络接口
+  dns-hijack:
+    - any:53                      # 劫持所有 DNS 请求
+
+# DNS 配置
+dns:
+  enable: true
+  listen: 0.0.0.0:53
+  enhanced-mode: fake-ip          # 使用 fake-ip 模式
+  fake-ip-range: 198.18.0.1/16    # fake-ip 地址池
+  nameserver:
+    - 223.5.5.5                   # 阿里 DNS
+    - 119.29.29.29                # 腾讯 DNS
+  fallback:
+    - 8.8.8.8                     # Google DNS
+    - 1.1.1.1                     # Cloudflare DNS
+
+# 代理节点配置
+proxies:
+  # VMess + KCP 节点（请修改为你的节点信息）
+  - name: "vmess-main"
+    type: vmess
+    server: your-server-ip        # 修改为你的服务器 IP
+    port: 9417                    # 修改为你的端口
+    uuid: your-uuid-here          # 修改为你的 UUID
+    alterId: 0
+    cipher: auto
+    udp: true                     # 启用 UDP（KCP 需要）
+    network: kcp                  # 使用 KCP 传输
+    kcp-opts:
+      mtu: 1350                   # MTU 大小
+      tti: 50                     # 传输时间间隔
+      uplink-capacity: 5          # 上行带宽
+      downlink-capacity: 20       # 下行带宽
+      congestion: false           # 拥塞控制
+      read-buffer-size: 1         # 读缓冲区大小
+      write-buffer-size: 1        # 写缓冲区大小
+      header:
+        type: wechat-video        # 伪装类型
+
+# 代理组配置
+proxy-groups:
+  - name: "PROXY"
+    type: select                  # 手动选择
+    proxies:
+      - vmess-main                # 引用上面定义的节点
+      - DIRECT                    # 直连
+
+# 路由规则
+rules:
+  # 局域网直连
+  - DOMAIN-SUFFIX,local,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+
+  # 国内直连
+  - GEOIP,CN,DIRECT
+
+  # 其他走代理
+  - MATCH,PROXY
