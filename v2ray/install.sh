@@ -299,8 +299,7 @@ echo -e "${BLUE}[4/4] 配置...${NC}"
 if [ ! -f "$CONFIG_FILE" ]; then
     echo -e "${YELLOW}创建默认配置...${NC}"
     mkdir -p "$ETC_DIR"
-    CONFIG_JSON='{"inbounds":[{"port":1080,"listen":"0.0.0.0","protocol":"socks","settings":{"udp":true}},{"port":1081,"listen":"0.0.0.0","protocol":"http"}],"outbounds":[{"protocol":"vmess","settings":{"vnext":[{"address":"YOUR_IP","port":8888,"users":[{"id":"YOUR_UUID","alterId":0}]}]},"streamSettings":{"network":"tcp"},"tag":"proxy"},{"protocol":"freedom","tag":"direct"}],"routing":{"domainStrategy":"IPIfNonMatch","rules":[{"type":"field","ip":["geoip:private","geoip:cn"],"outboundTag":"direct"},{"type":"field","domain":["geosite:cn"],"outboundTag":"direct"}]}}'
-    echo "$CONFIG_JSON" > "$CONFIG_FILE"
+    printf '%s' '{"inbounds":[{"port":1080,"listen":"0.0.0.0","protocol":"socks","settings":{"udp":true}},{"port":1081,"listen":"0.0.0.0","protocol":"http"}],"outbounds":[{"protocol":"vmess","settings":{"vnext":[{"address":"YOUR_IP","port":8888,"users":[{"id":"YOUR_UUID","alterId":0}]}]},"streamSettings":{"network":"tcp"},"tag":"proxy"},{"protocol":"freedom","tag":"direct"}],"routing":{"domainStrategy":"IPIfNonMatch","rules":[{"type":"field","ip":["geoip:private","geoip:cn"],"outboundTag":"direct"},{"type":"field","domain":["geosite:cn"],"outboundTag":"direct"}]}}' > "$CONFIG_FILE"
     echo -e "${GREEN}✓ 默认配置已创建${NC}"
 else
     echo -e "${GREEN}✓ 配置文件已存在${NC}"
