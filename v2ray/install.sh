@@ -113,6 +113,10 @@ echo -e "${BLUE}[2/4] 安装 Geo 数据...${NC}"
 mkdir -p "$SHARE_DIR"
 curl -fsSL -o "$SHARE_DIR/geoip.dat" "${DOWNLOAD_BASE}/data/geoip.dat" 2>/dev/null || true
 curl -fsSL -o "$SHARE_DIR/geosite.dat" "${DOWNLOAD_BASE}/data/geosite.dat" 2>/dev/null || true
+
+# V2Ray 5.x 在 BIN_DIR 查找 geo 数据，创建符号链接
+ln -sf "$SHARE_DIR/geoip.dat" "$BIN_DIR/geoip.dat" 2>/dev/null || true
+ln -sf "$SHARE_DIR/geosite.dat" "$BIN_DIR/geosite.dat" 2>/dev/null || true
 echo -e "${GREEN}✓ Geo 数据安装完成${NC}"
 
 echo ""
