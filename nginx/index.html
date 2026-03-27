@@ -62,28 +62,127 @@
         .download-btn.orange:hover { background: #d35400; }
         .section { background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0; }
         .file-list { font-size: 14px; color: #666; }
+        .scenario { background: #fff; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; }
+        .cmd { background: #2c3e50; color: #ecf0f1; padding: 10px 15px; border-radius: 5px; }
     </style>
 </head>
 <body>
 <h1 id="cec-tools">CEC Tools</h1>
-<p>服务器翻墙工具一键安装脚本。</p>
+<p>服务器翻墙工具一键安装脚本，支持 V2Ray 和 Clash Meta。</p>
+
 <h2 id="-">功能特性</h2>
 <ul>
+<li><strong>V2Ray</strong>: VMess 协议，KCP 传输，智能分流</li>
 <li><strong>Clash Meta</strong>: 支持 TUN 透明代理，智能分流</li>
-<li><strong>V2Ray</strong>: VMess 协议，支持多种传输方式</li>
+<li><strong>自动安装依赖</strong>: unzip、wget 等</li>
+<li><strong>预设节点配置</strong>: 开箱即用</li>
 </ul>
-<h2 id="-">快速开始</h2>
-<h3 id="-">一键安装全部工具</h3>
-<pre><code>curl -fsSL http://tools.cec.cc:8410/tools/install.sh | bash
-</code></pre>
-<h3 id="-">单独安装</h3>
-<h4 id="-clash-meta">安装 Clash Meta</h4>
-<pre><code>curl -fsSL http://tools.cec.cc:8410/tools/clash/install.sh | bash
-</code></pre>
-<h4 id="-v2ray">安装 V2Ray</h4>
-<pre><code>curl -fsSL http://tools.cec.cc:8410/tools/v2ray/install.sh | bash
-</code></pre>
+
 <hr>
+
+<h2 id="-">快速开始</h2>
+
+<h3 id="-v2ray-">一键安装 V2Ray（推荐）</h3>
+<pre><code>curl -fsSL http://tools.cec.cc:8410/tools/v2ray/install.sh | bash</code></pre>
+
+<h3 id="-clash-meta">一键安装 Clash Meta</h3>
+<pre><code>curl -fsSL http://tools.cec.cc:8410/tools/clash/install.sh | bash</code></pre>
+
+<hr>
+
+<h2 id="-">使用场景</h2>
+
+<div class="scenario">
+<h3 id="-1-">场景 1: 临时翻墙（单次使用）</h3>
+<p><strong>适用</strong>：临时需要访问 Google、GitHub 等</p>
+<pre><code># 安装后开启代理
+v2rayc on
+
+# 当前终端可访问外网
+curl https://www.google.com
+git clone https://github.com/xxx/xxx.git
+
+# 使用完后关闭
+v2rayc off</code></pre>
+<p><strong>注意</strong>: <code>v2rayc on</code> 仅在当前终端生效</p>
+</div>
+
+<div class="scenario">
+<h3 id="-2-docker-">场景 2: Docker 构建翻墙</h3>
+<p><strong>适用</strong>：构建时拉取海外镜像或 npm 包</p>
+<pre><code># 先开启代理
+v2rayc on
+
+# 然后正常构建
+docker build -t myapp .
+
+# 或使用代理构建
+export http_proxy=http://127.0.0.1:1081
+export https_proxy=http://127.0.0.1:1081
+docker build -t myapp .</code></pre>
+</div>
+
+<div class="scenario">
+<h3 id="-3-">场景 3: 持久化代理（永久开启）</h3>
+<p><strong>适用</strong>：需要长期翻墙服务</p>
+<pre><code># 启动 V2Ray
+v2rayc start
+
+# 验证
+v2rayc status
+curl -x http://127.0.0.1:1081 https://www.google.com</code></pre>
+</div>
+
+<div class="scenario">
+<h3 id="-4-clash-meta-">场景 4: Clash Meta 透明代理</h3>
+<p><strong>适用</strong>：需要全局代理，容器自动跟随</p>
+<pre><code># 安装
+curl -fsSL http://tools.cec.cc:8410/tools/clash/install.sh | bash
+
+# 启动透明代理
+clashc start
+
+# 所有流量自动翻墙，无需配置
+curl https://www.google.com
+docker run --rm alpine/curl curl -I https://www.google.com
+
+# 停止
+clashc stop</code></pre>
+<p><strong>注意</strong>: 透明代理需要 TUN/TAP 支持，Docker 容器内不支持</p>
+</div>
+
+<hr>
+
+<h2 id="-">命令参考</h2>
+
+<h3 id="v2ray-">V2Ray 命令</h3>
+<pre><code>v2rayc start     # 启动 V2Ray
+v2rayc stop      # 停止 V2Ray
+v2rayc status    # 查看状态
+v2rayc test      # 测试连接
+v2rayc on        # 开启 HTTP 代理（当前终端）
+v2rayc off       # 关闭 HTTP 代理
+v2rayc config    # 编辑配置
+v2rayc uninstall # 卸载</code></pre>
+
+<h3 id="clash-">Clash 命令</h3>
+<pre><code>clashc start     # 启动 Clash
+clashc stop      # 停止 Clash
+clashc status    # 查看状态
+clashc test      # 测试连接
+clashc uninstall # 卸载</code></pre>
+
+<hr>
+
+<h2 id="-">代理端口</h2>
+<table>
+<tr><th>协议</th><th>端口</th><th>说明</th></tr>
+<tr><td>SOCKS</td><td>1080</td><td>SOCKS5 代理</td></tr>
+<tr><td>HTTP</td><td>1081</td><td>HTTP 代理</td></tr>
+</table>
+
+<hr>
+
 <h2 id="-">下载脚本</h2>
 <div class="section">
 <p><strong>安装脚本下载：</strong></p>
@@ -91,7 +190,9 @@
 <a class="download-btn" href="/clash/install.sh" download>下载 clash/install.sh</a>
 <a class="download-btn" href="/v2ray/install.sh" download>下载 v2ray/install.sh</a>
 </div>
+
 <hr>
+
 <h2 id="-">二进制文件下载</h2>
 <div class="section">
 <p><strong>Clash Meta：</strong></p>
@@ -99,45 +200,39 @@
 <a class="download-btn" href="/clash/bin/clashc-linux-arm64-v1.18.1.gz" download>clashc-linux-arm64</a>
 <p class="file-list">配置文件：<a href="/clash/data/config.yaml.example" download>config.yaml.example</a> | <a href="/clash/data/geoip.dat" download>geoip.dat</a> | <a href="/clash/data/geosite.dat" download>geosite.dat</a></p>
 </div>
+
 <div class="section">
 <p><strong>V2Ray：</strong></p>
 <a class="download-btn orange" href="/v2ray/bin/v2ray-linux-64.zip" download>v2ray-linux-64</a>
 <a class="download-btn orange" href="/v2ray/bin/v2ray-linux-arm64-v8a.zip" download>v2ray-linux-arm64</a>
 </div>
+
 <hr>
-<h2 id="-">使用方法</h2>
-<h3 id="clash-meta">Clash Meta</h3>
-<pre><code>clashc start    # 启动服务
-clashc stop     # 停止服务
-clashc status   # 查看状态
-clashc test     # 测试连接
-</code></pre>
-<h3 id="v2ray">V2Ray</h3>
-<pre><code>v2rayc start           # 启动透明代理
-v2rayc stop            # 停止透明代理
-v2rayc status           # 查看状态
-v2rayc test            # 测试连接
-v2rayc docker-build     # Docker 构建使用代理
-</code></pre>
-<hr>
-<h2 id="-">架构说明</h2>
-<pre><code>cec-tools/
-├── install.sh          # 主安装脚本
-├── clash/
-│   ├── install.sh      # Clash 安装脚本
-│   ├── bin/            # Clash 二进制文件
-│   └── data/           # 配置文件和GeoIP数据
-│       └── config.yaml.example
-└── v2ray/
-    ├── install.sh      # V2Ray 安装脚本
-    └── bin/            # V2Ray 二进制文件
-</code></pre>
-<hr>
+
 <h2 id="-">注意事项</h2>
 <ol>
 <li>本工具仅供服务器内部网络加速使用</li>
 <li>请遵守当地法律法规</li>
-<li>配置文件中的节点信息需要替换为有效的节点</li>
+<li>默认配置已包含团队节点，开箱即用</li>
+<li>配置文件位于 <code>/usr/local/etc/v2ray/config.json</code></li>
 </ol>
+
+<hr>
+
+<h2 id="-">常见问题</h2>
+
+<h3 id="q-v2rayc-start-">Q: v2rayc start 启动失败？</h3>
+<p>检查日志：</p>
+<pre><code>tail -f /var/log/v2ray.log</code></pre>
+
+<h3 id="q-">Q: 如何更新节点配置？</h3>
+<pre><code>v2rayc config
+# 编辑 /usr/local/etc/v2ray/config.json</code></pre>
+
+<h3 id="q--">Q: 如何卸载？</h3>
+<pre><code>v2rayc uninstall
+# 或
+clashc uninstall</code></pre>
+
 </body>
 </html>
