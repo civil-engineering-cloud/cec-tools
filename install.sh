@@ -1,6 +1,6 @@
 #!/bin/bash
 # CEC Tools 主安装脚本
-# 用法: curl -fsSL http://gw.cec.cc:8410/tools/install.sh | bash
+# 用法: curl -fsSL http://tools.cec.cc:8410/tools/install.sh | bash
 # 或: curl -fsSL http://localhost:8410/tools/install.sh | bash
 
 set -e
@@ -19,12 +19,12 @@ echo ""
 # 自动检测下载源
 SCRIPT_SOURCE="${BASH_SOURCE[0]}"
 
-if [[ "$SCRIPT_SOURCE" == *"gw.cec.cc"* ]]; then
-    DOWNLOAD_BASE="http://gw.cec.cc:8410/tools"
+if [[ "$SCRIPT_SOURCE" == *"tools.cec.cc"* ]]; then
+    DOWNLOAD_BASE="http://tools.cec.cc:8410/tools"
 elif [[ "$SCRIPT_SOURCE" == *"localhost"* ]] || [[ "$SCRIPT_SOURCE" == *"127.0.0.1"* ]]; then
     DOWNLOAD_BASE="http://localhost:8410/tools"
 else
-    DOWNLOAD_BASE="https://gw.cec.cc:8410/tools"
+    DOWNLOAD_BASE="https://tools.cec.cc:8410/tools"
 fi
 
 echo -e "${BLUE}下载源: ${GREEN}$DOWNLOAD_BASE${NC}"
