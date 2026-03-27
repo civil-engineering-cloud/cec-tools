@@ -13,10 +13,21 @@ NC='\033[0m'
 echo -e "${GREEN}=== V2Ray 一键安装脚本 ===${NC}"
 echo ""
 
+# 自动选择是否需要 sudo
+if [ "$(id -u)" -eq 0 ]; then
+    SUDO=""
+else
+    SUDO="sudo"
+fi
+
 # 检查并安装依赖
-if ! command -v unzip &> /dev/null; then
-    echo -e "${YELLOW}正在安装 unzip...${NC}"
-    apt-get update -qq && apt-get install -y -qq unzip > /dev/null 2>&1
+if ! command -v unzip &> /dev/null || ! command -v wget &> /dev/null; then
+    echo -e "${YELLOW}正在安装 unzip wget...${NC}"
+    if [ "$(id -u)" -eq 0 ]; then
+        apt-get update -qq && apt-get install -y -qq unzip wget > /dev/null 2>&1
+    else
+        sudo apt-get update -qq && sudo apt-get install -y -qq unzip wget > /dev/null 2>&1
+    fi
 fi
 
 # 自动检测下载源
@@ -72,9 +83,9 @@ echo ""
 echo -e "${GREEN}[2/3] 安装 V2Ray...${NC}"
 
 unzip -q "$V2RAY_ZIP"
-sudo mkdir -p /usr/local/bin /usr/local/share/v2ray
-sudo cp v2ray /usr/local/bin/v2ray
-sudo chmod +x /usr/local/bin/v2ray
+${SUDO} mkdir -p /usr/local/bin /usr/local/share/v2ray
+${SUDO} cp v2ray /usr/local/bin/v2ray
+${SUDO} chmod +x /usr/local/bin/v2ray
 
 cd - > /dev/null
 rm -rf "$TMP_DIR"
@@ -85,9 +96,10 @@ echo ""
 # 3. 创建 v2rayc 命令
 echo -e "${GREEN}[3/3] 创建 v2rayc 命令...${NC}"
 
-sudo tee /usr/local/bin/v2rayc > /dev/null << 'V2RAYC_EOF'
+${SUDO} tee /usr/local/bin/v2rayc > /dev/null << 'V2RAYC_EOF'
 #!/bin/bash
 # V2Ray 管理命令
+# 需要 root 权限运行
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -97,6 +109,12 @@ NC='\033[0m'
 
 CONFIG_FILE="/usr/local/etc/v2ray/config.json"
 LOG_FILE="/var/log/v2ray.log"
+
+# v2rayc itself needs sudo to write to /usr/local
+SUDO="sudo"
+if [ "$(id -u)" -eq 0 ]; then
+    SUDO=""
+fi
 
 show_help() {
     echo -e "${BLUE}V2Ray 管理命令${NC}"
@@ -127,8 +145,8 @@ stop_v2ray() {
 uninstall_v2ray() {
     echo -e "${YELLOW}正在卸载 V2Ray...${NC}"
     stop_v2ray
-    sudo rm -f /usr/local/bin/v2ray /usr/local/bin/v2rayc
-    sudo rm -rf /usr/local/etc/v2ray /usr/local/share/v2ray
+    ${SUDO} rm -f /usr/local/bin/v2ray /usr/local/bin/v2rayc
+    ${SUDO} rm -rf /usr/local/etc/v2ray /usr/local/share/v2ray
     echo -e "${GREEN}✓ V2Ray 已卸载${NC}"
 }
 
@@ -202,8 +220,8 @@ case "${1:-help}" in
         fi
         ;;
     config)
-        sudo mkdir -p /usr/local/etc/v2ray
-        sudo ${EDITOR:-nano} "$CONFIG_FILE"
+        ${SUDO} mkdir -p /usr/local/etc/v2ray
+        ${SUDO} ${EDITOR:-nano} "$CONFIG_FILE"
         ;;
     help|--help|-h)
         show_help
@@ -216,23 +234,23 @@ case "${1:-help}" in
 esac
 V2RAYC_EOF
 
-sudo chmod +x /usr/local/bin/v2rayc
+${SUDO} chmod +x /usr/local/bin/v2rayc
 
 echo -e "${GREEN}✓ v2rayc 命令已创建${NC}"
 echo ""
 
 # 4. 下载预设配置
 echo -e "${GREEN}[4/4] 下载配置...${NC}"
-sudo mkdir -p /usr/local/etc/v2ray /usr/local/share/v2ray
+${SUDO} mkdir -p /usr/local/etc/v2ray /usr/local/share/v2ray
 
 # 下载 geoip 和 geosite
-sudo curl -fsSL -o /usr/local/share/v2ray/geoip.dat "${DOWNLOAD_BASE}/data/geoip.dat" 2>/dev/null || true
-sudo curl -fsSL -o /usr/local/share/v2ray/geosite.dat "${DOWNLOAD_BASE}/data/geosite.dat" 2>/dev/null || true
+${SUDO} curl -fsSL -o /usr/local/share/v2ray/geoip.dat "${DOWNLOAD_BASE}/data/geoip.dat" 2>/dev/null || true
+${SUDO} curl -fsSL -o /usr/local/share/v2ray/geosite.dat "${DOWNLOAD_BASE}/data/geosite.dat" 2>/dev/null || true
 
 # 下载预设配置（如果没有的话）
 if [ ! -f /usr/local/etc/v2ray/config.json ]; then
     echo -e "${YELLOW}配置文件不存在，创建默认配置...${NC}"
-    sudo tee /usr/local/etc/v2ray/config.json > /dev/null << 'CONFIG_EOF'
+    ${SUDO} tee /usr/local/etc/v2ray/config.json > /dev/null << 'CONFIG_EOF'
 {
   "log": {"loglevel": "warning"},
   "inbounds": [
