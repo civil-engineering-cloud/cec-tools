@@ -254,10 +254,10 @@ case "${1:-help}" in
         stop_v2ray
         ;;
     on)
-        proxy_on
+        echo "请使用 v2rayc-on 函数开启代理（需先 source ~/.bashrc）"
         ;;
     off)
-        proxy_off
+        echo "请使用 v2rayc-off 函数关闭代理（需先 source ~/.bashrc）"
         ;;
     status)
         if pgrep -x "v2ray" > /dev/null; then
@@ -371,8 +371,8 @@ echo "  v2rayc stop         # 停止 V2Ray"
 echo "  v2rayc status       # 查看状态"
 echo "  v2rayc test         # 测试连接"
 echo "  v2rayc config       # 编辑配置"
-echo "  v2rayc on           # 开启代理（当前终端）"
-echo "  v2rayc off          # 关闭代理"
+echo "  v2rayc-on         # 开启代理（当前终端）"
+echo "  v2rayc-off        # 关闭代理"
 echo "  v2rayc docker-build # Docker 构建使用代理"
 echo ""
 echo -e "${YELLOW}配置文件: $CONFIG_FILE_PATH${NC}"
