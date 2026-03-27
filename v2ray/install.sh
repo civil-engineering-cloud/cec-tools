@@ -348,12 +348,20 @@ echo -e "${GREEN}V2RayC 安装成功！${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 
-# 添加到 PATH
+# 添加到 PATH 和别名
 BASHRC_LINE="export PATH=\"$BIN_DIR:\$PATH\""
 if ! grep -q "$BIN_DIR" ~/.bashrc 2>/dev/null; then
     echo "$BASHRC_LINE" >> ~/.bashrc
     echo -e "${YELLOW}已添加 $BIN_DIR 到 PATH${NC}"
-    echo -e "${YELLOW}运行: source ~/.bashrc${NC}"
+fi
+
+# 添加 v2rayc-on 和 v2rayc-off 函数
+BASHRC_FUNC='v2rayc-on() { export http_proxy=http://127.0.0.1:1081 https_proxy=http://127.0.0.1:1081 HTTP_PROXY=http://127.0.0.1:1081 HTTPS_PROXY=http://127.0.0.1:1081; echo "✓ 代理已开启"; }
+v2rayc-off() { unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY; echo "✓ 代理已关闭"; }'
+if ! grep -q "v2rayc-on" ~/.bashrc 2>/dev/null; then
+    echo "" >> ~/.bashrc
+    echo "$BASHRC_FUNC" >> ~/.bashrc
+    echo -e "${YELLOW}已添加 v2rayc-on/off 函数${NC}"
 fi
 
 echo ""
