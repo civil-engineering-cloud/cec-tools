@@ -107,7 +107,24 @@ show_help() {
     echo -e "  ${GREEN}status${NC}     查看状态"
     echo -e "  ${GREEN}test${NC}       测试连接"
     echo -e "  ${GREEN}config${NC}     编辑配置"
+    echo -e "  ${GREEN}uninstall${NC}  卸载 V2Ray"
     echo -e "  ${GREEN}help${NC}       显示帮助"
+}
+
+stop_v2ray() {
+    if pgrep -x "v2ray" > /dev/null; then
+        pkill v2ray
+        echo -e "${GREEN}✓ V2Ray 已停止${NC}"
+    else
+        echo -e "${YELLOW}V2Ray 未运行${NC}"
+    fi
+}
+
+uninstall_v2ray() {
+    echo -e "${YELLOW}正在卸载 V2Ray...${NC}"
+    stop_v2ray
+    sudo rm -f /usr/local/bin/v2ray /usr/local/bin/v2rayc
+    echo -e "${GREEN}✓ V2Ray 已卸载${NC}"
 }
 
 start_v2ray() {
@@ -127,21 +144,15 @@ start_v2ray() {
     fi
 }
 
-stop_v2ray() {
-    if pgrep -x "v2ray" > /dev/null; then
-        pkill v2ray
-        echo -e "${GREEN}✓ V2Ray 已停止${NC}"
-    else
-        echo -e "${YELLOW}V2Ray 未运行${NC}"
-    fi
-}
-
 case "${1:-help}" in
     start)
         start_v2ray
         ;;
     stop)
         stop_v2ray
+        ;;
+    uninstall)
+        uninstall_v2ray
         ;;
     status)
         if pgrep -x "v2ray" > /dev/null; then
