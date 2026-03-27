@@ -52,9 +52,16 @@
             color: white;
             padding: 10px 20px;
             border-radius: 5px;
-            margin: 10px 5px 10px 0;
+            margin: 5px 5px 5px 0;
+            text-decoration: none;
         }
-        .download-btn:hover { background: #2980b9; text-decoration: none; }
+        .download-btn:hover { background: #2980b9; text-decoration: none; color: white; }
+        .download-btn.green { background: #27ae60; }
+        .download-btn.green:hover { background: #219a52; }
+        .download-btn.orange { background: #e67e22; }
+        .download-btn.orange:hover { background: #d35400; }
+        .section { background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .file-list { font-size: 14px; color: #666; }
     </style>
 </head>
 <body>
@@ -76,6 +83,27 @@
 <h4 id="-v2ray">安装 V2Ray</h4>
 <pre><code>curl -fsSL https://cec.cc/tools/v2ray/install.sh | bash
 </code></pre>
+<hr>
+<h2 id="-">下载脚本</h2>
+<div class="section">
+<p><strong>安装脚本下载：</strong></p>
+<a class="download-btn green" href="/tools/install.sh" download>下载 install.sh</a>
+<a class="download-btn" href="/clash/install.sh" download>下载 clash/install.sh</a>
+<a class="download-btn" href="/v2ray/install.sh" download>下载 v2ray/install.sh</a>
+</div>
+<hr>
+<h2 id="-">二进制文件下载</h2>
+<div class="section">
+<p><strong>Clash Meta：</strong></p>
+<a class="download-btn" href="/clash/bin/clashc-linux-amd64-v1.18.1.gz" download>clashc-linux-amd64</a>
+<a class="download-btn" href="/clash/bin/clashc-linux-arm64-v1.18.1.gz" download>clashc-linux-arm64</a>
+<p class="file-list">配置文件：<a href="/clash/data/config.yaml.example" download>config.yaml.example</a> | <a href="/clash/data/geoip.dat" download>geoip.dat</a> | <a href="/clash/data/geosite.dat" download>geosite.dat</a></p>
+</div>
+<div class="section">
+<p><strong>V2Ray：</strong></p>
+<a class="download-btn orange" href="/v2ray/bin/v2ray-linux-64.zip" download>v2ray-linux-64</a>
+<a class="download-btn orange" href="/v2ray/bin/v2ray-linux-arm64-v8a.zip" download>v2ray-linux-arm64</a>
+</div>
 <hr>
 <h2 id="-">使用方法</h2>
 <h3 id="clash-meta">Clash Meta</h3>
@@ -104,11 +132,6 @@ v2rayc docker-build     # Docker 构建使用代理
     ├── install.sh      # V2Ray 安装脚本
     └── bin/            # V2Ray 二进制文件
 </code></pre>
-<hr>
-<h2 id="-">下载脚本</h2>
-<p><a class="download-btn" href="/tools/install.sh" download>下载 install.sh</a>
-<a class="download-btn" href="/clash/install.sh" download>下载 clash/install.sh</a>
-<a class="download-btn" href="/v2ray/install.sh" download>下载 v2ray/install.sh</a></p>
 <hr>
 <h2 id="-">注意事项</h2>
 <ol>
