@@ -1,17 +1,30 @@
 {
+  "log": {
+    "loglevel": "warning"
+  },
   "inbounds": [
     {
       "port": 1080,
       "listen": "127.0.0.1",
       "protocol": "socks",
       "settings": {
+        "auth": "noauth",
         "udp": true
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
       }
     },
     {
       "port": 1081,
       "listen": "127.0.0.1",
-      "protocol": "http"
+      "protocol": "http",
+      "settings": {},
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      }
     }
   ],
   "outbounds": [
@@ -35,13 +48,6 @@
       "streamSettings": {
         "network": "kcp",
         "kcpSettings": {
-          "mtu": 1350,
-          "tti": 50,
-          "uplinkCapacity": 12,
-          "downlinkCapacity": 100,
-          "congestion": false,
-          "readBufferSize": 2,
-          "writeBufferSize": 2,
           "header": {
             "type": "wechat-video"
           }
@@ -51,10 +57,12 @@
     },
     {
       "protocol": "freedom",
+      "settings": {},
       "tag": "direct"
     },
     {
       "protocol": "blackhole",
+      "settings": {},
       "tag": "block"
     }
   ],
@@ -70,10 +78,6 @@
         "type": "field",
         "domain": ["geosite:cn"],
         "outboundTag": "direct"
-      },
-      {
-        "type": "field",
-        "outboundTag": "proxy"
       }
     ]
   }
