@@ -24,7 +24,7 @@ if [[ "$SCRIPT_SOURCE" == *"tools.cec.cc"* ]]; then
 elif [[ "$SCRIPT_SOURCE" == *"localhost"* ]] || [[ "$SCRIPT_SOURCE" == *"127.0.0.1"* ]]; then
     DOWNLOAD_BASE="http://localhost:8410/tools"
 else
-    DOWNLOAD_BASE="https://tools.cec.cc:8410/tools"
+    DOWNLOAD_BASE="http://tools.cec.cc:8410/tools"
 fi
 
 echo -e "${BLUE}下载源: ${GREEN}$DOWNLOAD_BASE${NC}"
