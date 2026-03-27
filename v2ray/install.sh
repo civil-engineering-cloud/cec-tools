@@ -162,7 +162,7 @@ start_v2ray() {
         return
     fi
 
-    nohup sudo /usr/local/bin/v2ray run -config "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
+    nohup /usr/local/bin/v2ray run -config "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
     sleep 2
 
     if pgrep -x "v2ray" > /dev/null; then
