@@ -20,10 +20,12 @@ if [[ $EUID -eq 0 ]]; then
     BIN_DIR="/usr/local/bin"
     SHARE_DIR="/usr/local/share/v2ray"
     ETC_DIR="/usr/local/etc/v2ray"
+    LOG_DIR="/var/log/v2ray"
 else
     BIN_DIR="$HOME/.local/bin"
     SHARE_DIR="$HOME/.local/share/v2ray"
     ETC_DIR="$HOME/.config/v2ray"
+    LOG_DIR="$HOME/.config/v2ray"
 fi
 
 # 自动检测下载源
@@ -119,7 +121,8 @@ echo ""
 echo -e "${BLUE}[3/4] 创建 v2rayc 命令...${NC}"
 
 mkdir -p "$BIN_DIR"
-cat > "$BIN_DIR/v2rayc" << 'V2RAYC_EOF'
+
+V2RAYC_CONTENT=$(cat << 'INNER_EOF'
 #!/bin/bash
 # V2RayC 统一命令入口
 
@@ -286,8 +289,10 @@ case "${1:-help}" in
         exit 1
         ;;
 esac
-V2RAYC_EOF
+INNER_EOF
+)
 
+echo "$V2RAYC_CONTENT" > "$BIN_DIR/v2rayc"
 chmod +x "$BIN_DIR/v2rayc"
 echo -e "${GREEN}✓ v2rayc 命令已创建${NC}"
 
@@ -296,12 +301,35 @@ echo ""
 # 步骤 4: 配置
 echo -e "${BLUE}[4/4] 配置...${NC}"
 
-if [ ! -f "$CONFIG_FILE" ]; then
+CONFIG_FILE_PATH="$ETC_DIR/config.json"
+
+if [ ! -f "$CONFIG_FILE_PATH" ]; then
     echo -e "${YELLOW}创建默认配置...${NC}"
     mkdir -p "$ETC_DIR"
-    curl -fsSL -o "$CONFIG_FILE" "${DOWNLOAD_BASE}/data/config.json" 2>/dev/null || {
-        echo '{"inbounds":[{"port":1080,"listen":"0.0.0.0","protocol":"socks","settings":{"udp":true}},{"port":1081,"listen":"0.0.0.0","protocol":"http"}],"outbounds":[{"protocol":"vmess","settings":{"vnext":[{"address":"YOUR_IP","port":8888,"users":[{"id":"YOUR_UUID","alterId":0}]}]},"streamSettings":{"network":"tcp"},"tag":"proxy"},{"protocol":"freedom","tag":"direct"}],"routing":{"domainStrategy":"IPIfNonMatch","rules":[{"type":"field","ip":["geoip:private","geoip:cn"],"outboundTag":"direct"},{"type":"field","domain":["geosite:cn"],"outboundTag":"direct"}]}}' > "$CONFIG_FILE"
-    }
+
+    # 尝试下载配置
+    if ! curl -fsSL -o "$CONFIG_FILE_PATH" "${DOWNLOAD_BASE}/data/config.json" 2>/dev/null; then
+        # 下载失败，使用内联配置
+        cat > "$CONFIG_FILE_PATH" <<-CONFIGEOF
+		{
+		  "inbounds": [
+		    {"port": 1080, "listen": "0.0.0.0", "protocol": "socks", "settings": {"udp": true}},
+		    {"port": 1081, "listen": "0.0.0.0", "protocol": "http"}
+		  ],
+		  "outbounds": [
+		    {"protocol": "vmess", "settings": {"vnext": [{"address": "YOUR_IP", "port": 8888, "users": [{"id": "YOUR_UUID", "alterId": 0}]}]}, "streamSettings": {"network": "tcp"}, "tag": "proxy"},
+		    {"protocol": "freedom", "tag": "direct"}
+		  ],
+		  "routing": {
+		    "domainStrategy": "IPIfNonMatch",
+		    "rules": [
+		      {"type": "field", "ip": ["geoip:private", "geoip:cn"], "outboundTag": "direct"},
+		      {"type": "field", "domain": ["geosite:cn"], "outboundTag": "direct"}
+		    ]
+		  }
+		}
+		CONFIGEOF
+    fi
     echo -e "${GREEN}✓ 默认配置已创建${NC}"
 else
     echo -e "${GREEN}✓ 配置文件已存在${NC}"
@@ -332,5 +360,5 @@ echo "  v2rayc on           # 开启代理（当前终端）"
 echo "  v2rayc off          # 关闭代理"
 echo "  v2rayc docker-build # Docker 构建使用代理"
 echo ""
-echo -e "${YELLOW}配置文件: $CONFIG_FILE${NC}"
+echo -e "${YELLOW}配置文件: $CONFIG_FILE_PATH${NC}"
 echo ""
