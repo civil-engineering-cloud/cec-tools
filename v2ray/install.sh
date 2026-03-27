@@ -13,6 +13,12 @@ NC='\033[0m'
 echo -e "${GREEN}=== V2Ray 一键安装脚本 ===${NC}"
 echo ""
 
+# 检查并安装依赖
+if ! command -v unzip &> /dev/null; then
+    echo -e "${YELLOW}正在安装 unzip...${NC}"
+    apt-get update -qq && apt-get install -y -qq unzip > /dev/null 2>&1
+fi
+
 # 自动检测下载源
 SCRIPT_SOURCE="${BASH_SOURCE[0]}"
 
