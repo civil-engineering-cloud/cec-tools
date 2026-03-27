@@ -83,9 +83,9 @@ echo ""
 echo -e "${GREEN}[2/3] 安装 V2Ray...${NC}"
 
 unzip -q "$V2RAY_ZIP"
-${SUDO} mkdir -p /usr/local/bin /usr/local/share/v2ray
-${SUDO} cp v2ray /usr/local/bin/v2ray
-${SUDO} chmod +x /usr/local/bin/v2ray
+mkdir -p /usr/local/bin /usr/local/share/v2ray
+cp v2ray /usr/local/bin/v2ray
+chmod +x /usr/local/bin/v2ray
 
 cd - > /dev/null
 rm -rf "$TMP_DIR"
