@@ -10,10 +10,11 @@ services:
       - "8410:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/index.html:/usr/share/nginx/html/index.html:ro
       - ./clash:/usr/share/nginx/html/clash:ro
       - ./v2ray:/usr/share/nginx/html/v2ray:ro
       - ./install.sh:/usr/share/nginx/html/tools/install.sh:ro
-      - ./README.md:/usr/share/nginx/html/tools/index.html:ro
+      - ./README.md:/usr/share/nginx/html/tools/index.md:ro
     networks:
       - cec-tools-network
 
