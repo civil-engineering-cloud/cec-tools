@@ -13,20 +13,13 @@ NC='\033[0m'
 echo -e "${GREEN}=== V2Ray 一键安装脚本 ===${NC}"
 echo ""
 
-# 自动选择是否需要 sudo
-if [ "$(id -u)" -eq 0 ]; then
-    SUDO=""
-else
-    SUDO="sudo"
-fi
-
 # 检查并安装依赖
 if ! command -v unzip &> /dev/null || ! command -v wget &> /dev/null; then
     echo -e "${YELLOW}正在安装 unzip wget...${NC}"
     if [ "$(id -u)" -eq 0 ]; then
-        apt-get update -qq && apt-get install -y -qq unzip wget > /dev/null 2>&1
+        apt-get update -qq && apt-get install -y -qq unzip wget curl > /dev/null 2>&1
     else
-        sudo apt-get update -qq && sudo apt-get install -y -qq unzip wget > /dev/null 2>&1
+        sudo apt-get update -qq && sudo apt-get install -y -qq unzip wget curl > /dev/null 2>&1
     fi
 fi
 
@@ -83,9 +76,9 @@ echo ""
 echo -e "${GREEN}[2/3] 安装 V2Ray...${NC}"
 
 unzip -q "$V2RAY_ZIP"
-mkdir -p /usr/local/bin /usr/local/share/v2ray
-cp v2ray /usr/local/bin/v2ray
-chmod +x /usr/local/bin/v2ray
+mkdir -p "$HOME/.local/bin" "$HOME/.config/v2ray"
+cp v2ray "$HOME/.local/bin/v2ray"
+chmod +x "$HOME/.local/bin/v2ray"
 
 cd - > /dev/null
 rm -rf "$TMP_DIR"
@@ -96,10 +89,9 @@ echo ""
 # 3. 创建 v2rayc 命令
 echo -e "${GREEN}[3/3] 创建 v2rayc 命令...${NC}"
 
-${SUDO} tee /usr/local/bin/v2rayc > /dev/null << 'V2RAYC_EOF'
+tee "$HOME/.local/bin/v2rayc" > /dev/null << 'V2RAYC_EOF'
 #!/bin/bash
 # V2Ray 管理命令
-# 需要 root 权限运行
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -107,14 +99,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-CONFIG_FILE="/usr/local/etc/v2ray/config.json"
-LOG_FILE="/var/log/v2ray.log"
-
-# v2rayc itself needs sudo to write to /usr/local
-SUDO="sudo"
-if [ "$(id -u)" -eq 0 ]; then
-    SUDO=""
-fi
+CONFIG_FILE="$HOME/.config/v2ray/config.json"
+LOG_FILE="$HOME/.config/v2ray/v2ray.log"
+V2RAY_BIN="$HOME/.local/bin/v2ray"
 
 show_help() {
     echo -e "${BLUE}V2Ray 管理命令${NC}"
@@ -145,8 +132,8 @@ stop_v2ray() {
 uninstall_v2ray() {
     echo -e "${YELLOW}正在卸载 V2Ray...${NC}"
     stop_v2ray
-    ${SUDO} rm -f /usr/local/bin/v2ray /usr/local/bin/v2rayc
-    ${SUDO} rm -rf /usr/local/etc/v2ray /usr/local/share/v2ray
+    rm -f "$HOME/.local/bin/v2ray" "$HOME/.local/bin/v2rayc"
+    rm -rf "$HOME/.config/v2ray"
     echo -e "${GREEN}✓ V2Ray 已卸载${NC}"
 }
 
@@ -162,7 +149,7 @@ start_v2ray() {
         return
     fi
 
-    nohup /usr/local/bin/v2ray run -config "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
+    nohup "$V2RAY_BIN" run -config "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
     sleep 2
 
     if pgrep -x "v2ray" > /dev/null; then
@@ -220,8 +207,8 @@ case "${1:-help}" in
         fi
         ;;
     config)
-        ${SUDO} mkdir -p /usr/local/etc/v2ray
-        ${SUDO} ${EDITOR:-nano} "$CONFIG_FILE"
+        mkdir -p "$HOME/.config/v2ray"
+        ${EDITOR:-nano} "$CONFIG_FILE"
         ;;
     help|--help|-h)
         show_help
@@ -234,23 +221,23 @@ case "${1:-help}" in
 esac
 V2RAYC_EOF
 
-${SUDO} chmod +x /usr/local/bin/v2rayc
+chmod +x "$HOME/.local/bin/v2rayc"
 
 echo -e "${GREEN}✓ v2rayc 命令已创建${NC}"
 echo ""
 
 # 4. 下载预设配置
 echo -e "${GREEN}[4/4] 下载配置...${NC}"
-${SUDO} mkdir -p /usr/local/etc/v2ray /usr/local/share/v2ray
+mkdir -p "$HOME/.config/v2ray"
 
 # 下载 geoip 和 geosite
-${SUDO} curl -fsSL -o /usr/local/share/v2ray/geoip.dat "${DOWNLOAD_BASE}/data/geoip.dat" 2>/dev/null || true
-${SUDO} curl -fsSL -o /usr/local/share/v2ray/geosite.dat "${DOWNLOAD_BASE}/data/geosite.dat" 2>/dev/null || true
+curl -fsSL -o "$HOME/.config/v2ray/geoip.dat" "${DOWNLOAD_BASE}/data/geoip.dat" 2>/dev/null || true
+curl -fsSL -o "$HOME/.config/v2ray/geosite.dat" "${DOWNLOAD_BASE}/data/geosite.dat" 2>/dev/null || true
 
 # 下载预设配置（如果没有的话）
-if [ ! -f /usr/local/etc/v2ray/config.json ]; then
+if [ ! -f "$HOME/.config/v2ray/config.json" ]; then
     echo -e "${YELLOW}配置文件不存在，创建默认配置...${NC}"
-    tee /usr/local/etc/v2ray/config.json > /dev/null << 'CONFIG_EOF'
+    tee "$HOME/.config/v2ray/config.json" > /dev/null << 'CONFIG_EOF'
 {
   "inbounds": [
     {
@@ -298,6 +285,19 @@ fi
 
 echo ""
 echo -e "${GREEN}=== 安装完成 ===${NC}"
+echo ""
+
+# 自动添加 ~/.local/bin 到 PATH
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    echo -e "${YELLOW}正在添加 ~/.local/bin 到 PATH...${NC}"
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+    export PATH="$HOME/.local/bin:$PATH"
+    echo -e "${GREEN}✓ 已添加 PATH${NC}"
+    echo -e "${YELLOW}当前终端已生效，新终端运行: source ~/.bashrc${NC}"
+else
+    echo -e "${GREEN}✓ PATH 已配置${NC}"
+fi
+
 echo ""
 echo "管理命令："
 echo "  v2rayc start    # 启动 V2Ray"
