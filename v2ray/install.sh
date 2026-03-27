@@ -315,14 +315,15 @@ if [ ! -f "$CONFIG_FILE_PATH" ]; then
     # 尝试下载配置
     if ! curl -fsSL -o "$CONFIG_FILE_PATH" "${DOWNLOAD_BASE}/data/config.json" 2>/dev/null; then
         # 下载失败，使用内联配置
-        cat > "$CONFIG_FILE_PATH" <<-CONFIGEOF
+        curl -fsSL -o "$CONFIG_FILE_PATH" "${DOWNLOAD_BASE}/data/config.json" 2>/dev/null || {
+            cat > "$CONFIG_FILE_PATH" <<-CONFIGEOF
 		{
 		  "inbounds": [
-		    {"port": 1080, "listen": "0.0.0.0", "protocol": "socks", "settings": {"udp": true}},
-		    {"port": 1081, "listen": "0.0.0.0", "protocol": "http"}
+		    {"port": 1080, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": true}},
+		    {"port": 1081, "listen": "127.0.0.1", "protocol": "http"}
 		  ],
 		  "outbounds": [
-		    {"protocol": "vmess", "settings": {"vnext": [{"address": "YOUR_IP", "port": 8888, "users": [{"id": "YOUR_UUID", "alterId": 0}]}]}, "streamSettings": {"network": "tcp"}, "tag": "proxy"},
+		    {"protocol": "vmess", "settings": {"vnext": [{"address": "74.48.78.190", "port": 9417, "users": [{"id": "504a8d6b-d8bc-49a5-a611-94eb0b9d9037", "alterId": 0, "security": "auto"}]}]}, "streamSettings": {"network": "kcp", "kcpSettings": {"mtu": 1350, "tti": 50, "uplinkCapacity": 12, "downlinkCapacity": 100, "congestion": false, "readBufferSize": 2, "writeBufferSize": 2, "header": {"type": "wechat-video"}}}, "tag": "proxy"},
 		    {"protocol": "freedom", "tag": "direct"}
 		  ],
 		  "routing": {
@@ -334,6 +335,7 @@ if [ ! -f "$CONFIG_FILE_PATH" ]; then
 		  }
 		}
 		CONFIGEOF
+        }
     fi
     echo -e "${GREEN}✓ 默认配置已创建${NC}"
 else
