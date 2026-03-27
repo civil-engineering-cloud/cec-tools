@@ -250,20 +250,48 @@ ${SUDO} curl -fsSL -o /usr/local/share/v2ray/geosite.dat "${DOWNLOAD_BASE}/data/
 # 下载预设配置（如果没有的话）
 if [ ! -f /usr/local/etc/v2ray/config.json ]; then
     echo -e "${YELLOW}配置文件不存在，创建默认配置...${NC}"
-    ${SUDO} tee /usr/local/etc/v2ray/config.json > /dev/null << 'CONFIG_EOF'
+    tee /usr/local/etc/v2ray/config.json > /dev/null << 'CONFIG_EOF'
 {
-  "log": {"loglevel": "warning"},
   "inbounds": [
-    {"listen": "0.0.0.0", "port": 1080, "protocol": "socks"},
-    {"listen": "0.0.0.0", "port": 1081, "protocol": "http"}
+    {
+      "port": 1080,
+      "listen": "0.0.0.0",
+      "protocol": "socks",
+      "settings": {"udp": true}
+    },
+    {
+      "port": 1081,
+      "listen": "0.0.0.0",
+      "protocol": "http"
+    }
   ],
   "outbounds": [
-    {"protocol": "vmess", "settings": {"vnext": [{"address": "YOUR_SERVER", "port": 443, "users": [{"id": "YOUR_UUID"}]}]}},
-    {"protocol": "freedom"}
-  ]
+    {
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "74.48.78.190",
+            "port": 9417,
+            "users": [{"id": "504a8d6b-d8bc-49a5-a611-94eb0b9d9037", "alterId": 0, "security": "auto"}]
+          }
+        ]
+      },
+      "streamSettings": {"network": "kcp", "kcpSettings": {"mtu": 1350, "tti": 50, "uplinkCapacity": 12, "downlinkCapacity": 100, "congestion": false, "readBufferSize": 2, "writeBufferSize": 2, "header": {"type": "wechat-video"}}},
+      "tag": "proxy"
+    },
+    {"protocol": "freedom", "tag": "direct"}
+  ],
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {"type": "field", "ip": ["geoip:private", "geoip:cn"], "outboundTag": "direct"},
+      {"type": "field", "domain": ["geosite:cn"], "outboundTag": "direct"}
+    ]
+  }
 }
 CONFIG_EOF
-    echo -e "${YELLOW}请编辑配置添加节点信息: sudo v2rayc config${NC}"
+    echo -e "${GREEN}✓ 默认配置已创建${NC}"
 else
     echo -e "${GREEN}✓ 配置文件已存在${NC}"
 fi
