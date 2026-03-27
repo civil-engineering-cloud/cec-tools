@@ -187,6 +187,7 @@ start_v2ray() {
         return
     fi
 
+    mkdir -p "$(dirname "$LOG_FILE")"
     nohup "$BIN_DIR/v2ray" run -config "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
     sleep 2
 
