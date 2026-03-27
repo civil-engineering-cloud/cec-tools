@@ -14,7 +14,6 @@ services:
       - ./clash:/usr/share/nginx/html/clash:ro
       - ./v2ray:/usr/share/nginx/html/v2ray:ro
       - ./install.sh:/usr/share/nginx/html/tools/install.sh:ro
-      - ./README.md:/usr/share/nginx/html/tools/index.md:ro
     networks:
       - cec-tools-network
 

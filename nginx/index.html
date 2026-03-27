@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CEC Tools</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -14,7 +13,8 @@
             padding: 20px;
             color: #333;
         }
-        h1, h2, h3 { color: #2c3e50; }
+        h1, h2, h3 { color: #2c3e50; margin-top: 24px; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
         code {
             background: #f4f4f4;
             padding: 2px 6px;
@@ -31,40 +31,90 @@
             background: none;
             padding: 0;
         }
-        a { color: #3498db; }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
         ul, ol { padding-left: 25px; }
         li { margin: 5px 0; }
         blockquote {
-            border-left: 4px solid #ddd;
-            margin: 0;
-            padding-left: 15px;
-            color: #666;
+            border-left: 4px solid #3498db;
+            margin: 15px 0;
+            padding: 10px 15px;
+            background: #f9f9f9;
         }
-        hr {
-            border: none;
-            border-top: 1px solid #eee;
-            margin: 20px 0;
+        hr { border: none; border-top: 1px solid #eee; margin: 25px 0; }
+        table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #3498db; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .download-btn {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 10px 5px 10px 0;
         }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th { background: #f4f4f4; }
+        .download-btn:hover { background: #2980b9; text-decoration: none; }
     </style>
 </head>
 <body>
-    <div id="content"></div>
-    <script>
-        fetch('index.md')
-            .then(r => r.text())
-            .then(md => {
-                document.getElementById('content').innerHTML = marked.parse(md);
-            });
-    </script>
+<h1 id="cec-tools">CEC Tools</h1>
+<p>服务器翻墙工具一键安装脚本。</p>
+<h2 id="-">功能特性</h2>
+<ul>
+<li><strong>Clash Meta</strong>: 支持 TUN 透明代理，智能分流</li>
+<li><strong>V2Ray</strong>: VMess 协议，支持多种传输方式</li>
+</ul>
+<h2 id="-">快速开始</h2>
+<h3 id="-">一键安装全部工具</h3>
+<pre><code>curl -fsSL https://cec.cc/tools/install.sh | bash
+</code></pre>
+<h3 id="-">单独安装</h3>
+<h4 id="-clash-meta">安装 Clash Meta</h4>
+<pre><code>curl -fsSL https://cec.cc/tools/clash/install.sh | bash
+</code></pre>
+<h4 id="-v2ray">安装 V2Ray</h4>
+<pre><code>curl -fsSL https://cec.cc/tools/v2ray/install.sh | bash
+</code></pre>
+<hr>
+<h2 id="-">使用方法</h2>
+<h3 id="clash-meta">Clash Meta</h3>
+<pre><code>clashc start    # 启动服务
+clashc stop     # 停止服务
+clashc status   # 查看状态
+clashc test     # 测试连接
+</code></pre>
+<h3 id="v2ray">V2Ray</h3>
+<pre><code>v2rayc start           # 启动透明代理
+v2rayc stop            # 停止透明代理
+v2rayc status           # 查看状态
+v2rayc test            # 测试连接
+v2rayc docker-build     # Docker 构建使用代理
+</code></pre>
+<hr>
+<h2 id="-">架构说明</h2>
+<pre><code>cec-tools/
+├── install.sh          # 主安装脚本
+├── clash/
+│   ├── install.sh      # Clash 安装脚本
+│   ├── bin/            # Clash 二进制文件
+│   └── data/           # 配置文件和GeoIP数据
+│       └── config.yaml.example
+└── v2ray/
+    ├── install.sh      # V2Ray 安装脚本
+    └── bin/            # V2Ray 二进制文件
+</code></pre>
+<hr>
+<h2 id="-">下载脚本</h2>
+<p><a class="download-btn" href="/tools/install.sh" download>下载 install.sh</a>
+<a class="download-btn" href="/clash/install.sh" download>下载 clash/install.sh</a>
+<a class="download-btn" href="/v2ray/install.sh" download>下载 v2ray/install.sh</a></p>
+<hr>
+<h2 id="-">注意事项</h2>
+<ol>
+<li>本工具仅供服务器内部网络加速使用</li>
+<li>请遵守当地法律法规</li>
+<li>配置文件中的节点信息需要替换为有效的节点</li>
+</ol>
 </body>
 </html>
