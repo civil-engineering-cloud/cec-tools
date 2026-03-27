@@ -188,6 +188,7 @@ start_v2ray() {
     fi
 
     mkdir -p "$(dirname "$LOG_FILE")"
+    export V2RAY_ASSET_PATH="$SHARE_DIR"
     nohup "$BIN_DIR/v2ray" run -config "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
     sleep 2
 
