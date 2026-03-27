@@ -1,6 +1,6 @@
 #!/bin/bash
 # V2Ray 一键安装脚本
-# 用法: curl -fsSL https://gw.cec.cc:8410/tools/v2ray/install.sh | bash
+# 用法: curl -fsSL http://gw.cec.cc:8410/tools/v2ray/install.sh | bash
 
 set -e
 
@@ -15,9 +15,10 @@ echo ""
 
 # 自动检测下载源
 SCRIPT_SOURCE="${BASH_SOURCE[0]}"
-if [[ "$SCRIPT_SOURCE" == *"localhost"* ]] || [[ "$SCRIPT_SOURCE" == *"127.0.0.1"* ]]; then
-    DOWNLOAD_BASE="http://localhost:8410/tools/v2ray"
-elif curl -m 3 -fsSL -I "http://localhost:8410/tools/v2ray/install.sh" >/dev/null 2>&1; then
+
+if [[ "$SCRIPT_SOURCE" == *"gw.cec.cc"* ]]; then
+    DOWNLOAD_BASE="http://gw.cec.cc:8410/tools/v2ray"
+elif [[ "$SCRIPT_SOURCE" == *"localhost"* ]] || [[ "$SCRIPT_SOURCE" == *"127.0.0.1"* ]]; then
     DOWNLOAD_BASE="http://localhost:8410/tools/v2ray"
 else
     DOWNLOAD_BASE="https://gw.cec.cc:8410/tools/v2ray"
