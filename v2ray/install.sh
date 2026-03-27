@@ -1,6 +1,6 @@
 #!/bin/bash
-# V2Ray 一键安装脚本
-# 用法: curl -fsSL http://tools.cec.cc:8410/tools/v2ray/install.sh | bash
+# V2RayC 一键安装脚本（用户目录版，无需 sudo）
+# 使用方法: curl -fsSL https://cec.cc/tools/v2ray/install.sh | bash
 
 set -e
 
@@ -10,31 +10,34 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo -e "${GREEN}=== V2Ray 一键安装脚本 ===${NC}"
+echo -e "${BLUE}========================================${NC}"
+echo -e "${BLUE}V2RayC 智能安装${NC}"
+echo -e "${BLUE}========================================${NC}"
 echo ""
 
-# 检查并安装依赖
-if ! command -v unzip &> /dev/null || ! command -v wget &> /dev/null; then
-    echo -e "${YELLOW}正在安装 unzip wget...${NC}"
-    if [ "$(id -u)" -eq 0 ]; then
-        apt-get update -qq && apt-get install -y -qq unzip wget curl > /dev/null 2>&1
-    else
-        sudo apt-get update -qq && sudo apt-get install -y -qq unzip wget curl > /dev/null 2>&1
-    fi
+# 检测是否 root
+if [[ $EUID -eq 0 ]]; then
+    BIN_DIR="/usr/local/bin"
+    SHARE_DIR="/usr/local/share/v2ray"
+    ETC_DIR="/usr/local/etc/v2ray"
+else
+    BIN_DIR="$HOME/.local/bin"
+    SHARE_DIR="$HOME/.local/share/v2ray"
+    ETC_DIR="$HOME/.config/v2ray"
 fi
 
 # 自动检测下载源
 SCRIPT_SOURCE="${BASH_SOURCE[0]}"
-
-if [[ "$SCRIPT_SOURCE" == *"tools.cec.cc"* ]]; then
-    DOWNLOAD_BASE="http://tools.cec.cc:8410/tools/v2ray"
-elif [[ "$SCRIPT_SOURCE" == *"localhost"* ]] || [[ "$SCRIPT_SOURCE" == *"127.0.0.1"* ]]; then
+if [[ "$SCRIPT_SOURCE" == *"localhost"* ]] || [[ "$SCRIPT_SOURCE" == *"127.0.0.1"* ]]; then
     DOWNLOAD_BASE="http://localhost:8410/tools/v2ray"
+elif [[ "$SCRIPT_SOURCE" == *"cec.cc"* ]]; then
+    DOWNLOAD_BASE="https://cec.cc/tools/v2ray"
 else
     DOWNLOAD_BASE="http://tools.cec.cc:8410/tools/v2ray"
 fi
 
 echo "下载源: $DOWNLOAD_BASE"
+echo "安装目录: $BIN_DIR"
 echo ""
 
 # 检测架构
@@ -47,7 +50,7 @@ case "$ARCH" in
         V2RAY_ZIP="v2ray-linux-arm64-v8a.zip"
         ;;
     *)
-        echo -e "${RED}不支持的架构: $ARCH${NC}"
+        echo -e "${RED}错误: 不支持的架构 $ARCH${NC}"
         exit 1
         ;;
 esac
@@ -55,43 +58,70 @@ esac
 echo "检测到系统架构: $ARCH"
 echo ""
 
-# 1. 安装 V2Ray 核心
-echo -e "${GREEN}[1/3] 下载 V2Ray...${NC}"
+# 步骤 1: 安装 V2Ray 核心
+echo -e "${BLUE}[1/4] 安装 V2Ray 核心...${NC}"
 
-TMP_DIR=$(mktemp -d)
-cd "$TMP_DIR"
-
-V2RAY_URL="${DOWNLOAD_BASE}/bin/${V2RAY_ZIP}"
-
-echo "下载地址: $V2RAY_URL"
-if wget -q --show-progress -O "$V2RAY_ZIP" "$V2RAY_URL" 2>&1 || curl -fL --progress-bar -o "$V2RAY_ZIP" "$V2RAY_URL"; then
-    echo -e "${GREEN}✓ 下载成功${NC}"
+if [[ -f "$BIN_DIR/v2ray" ]] || command -v v2ray &> /dev/null; then
+    echo -e "${YELLOW}V2Ray 已安装，跳过${NC}"
 else
-    echo -e "${RED}✗ 下载失败${NC}"
+    TMP_DIR=$(mktemp -d)
+    cd "$TMP_DIR"
+
+    echo -e "${YELLOW}正在下载 V2Ray...${NC}"
+    MIRRORS=(
+        "${DOWNLOAD_BASE}/bin/${V2RAY_ZIP}"
+        "https://ghproxy.com/https://github.com/v2fly/v2ray-core/releases/download/v5.44.1/${V2RAY_ZIP}"
+        "https://github.com/v2fly/v2ray-core/releases/download/v5.44.1/${V2RAY_ZIP}"
+    )
+
+    DOWNLOAD_SUCCESS=false
+    for MIRROR_URL in "${MIRRORS[@]}"; do
+        if curl -fL --progress-bar --connect-timeout 30 --max-time 120 -o "$V2RAY_ZIP" "$MIRROR_URL" 2>&1; then
+            FILE_SIZE=$(stat -c%s "$V2RAY_ZIP" 2>/dev/null || echo "0")
+            if [[ "$FILE_SIZE" -gt 10485760 ]] && unzip -t "$V2RAY_ZIP" > /dev/null 2>&1; then
+                DOWNLOAD_SUCCESS=true
+                break
+            fi
+        fi
+    done
+
+    if [[ "$DOWNLOAD_SUCCESS" == "false" ]]; then
+        echo -e "${RED}错误: V2Ray 下载失败${NC}"
+        cd - > /dev/null
+        rm -rf "$TMP_DIR"
+        exit 1
+    fi
+
+    unzip -q "$V2RAY_ZIP"
+    mkdir -p "$BIN_DIR" "$SHARE_DIR" "$ETC_DIR"
+    cp v2ray "$BIN_DIR/v2ray"
+    chmod +x "$BIN_DIR/v2ray"
+
+    cd - > /dev/null
     rm -rf "$TMP_DIR"
-    exit 1
+
+    echo -e "${GREEN}✓ V2Ray 安装完成${NC}"
 fi
 
 echo ""
-echo -e "${GREEN}[2/3] 安装 V2Ray...${NC}"
 
-unzip -q "$V2RAY_ZIP"
-mkdir -p "$HOME/.local/bin" "$HOME/.config/v2ray"
-cp v2ray "$HOME/.local/bin/v2ray"
-chmod +x "$HOME/.local/bin/v2ray"
+# 步骤 2: 安装 geo 数据
+echo -e "${BLUE}[2/4] 安装 Geo 数据...${NC}"
 
-cd - > /dev/null
-rm -rf "$TMP_DIR"
+mkdir -p "$SHARE_DIR"
+curl -fsSL -o "$SHARE_DIR/geoip.dat" "${DOWNLOAD_BASE}/data/geoip.dat" 2>/dev/null || true
+curl -fsSL -o "$SHARE_DIR/geosite.dat" "${DOWNLOAD_BASE}/data/geosite.dat" 2>/dev/null || true
+echo -e "${GREEN}✓ Geo 数据安装完成${NC}"
 
-echo -e "${GREEN}✓ V2Ray 安装完成${NC}"
 echo ""
 
-# 3. 创建 v2rayc 命令
-echo -e "${GREEN}[3/3] 创建 v2rayc 命令...${NC}"
+# 步骤 3: 创建 v2rayc 命令
+echo -e "${BLUE}[3/4] 创建 v2rayc 命令...${NC}"
 
-tee "$HOME/.local/bin/v2rayc" > /dev/null << 'V2RAYC_EOF'
+mkdir -p "$BIN_DIR"
+cat > "$BIN_DIR/v2rayc" << 'V2RAYC_EOF'
 #!/bin/bash
-# V2Ray 管理命令
+# V2RayC 统一命令入口
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -99,24 +129,37 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-CONFIG_FILE="$HOME/.config/v2ray/config.json"
-LOG_FILE="$HOME/.config/v2ray/v2ray.log"
-V2RAY_BIN="$HOME/.local/bin/v2ray"
+if [[ $EUID -eq 0 ]]; then
+    BIN_DIR="/usr/local/bin"
+    SHARE_DIR="/usr/local/share/v2ray"
+    ETC_DIR="/usr/local/etc/v2ray"
+    LOG_DIR="/var/log/v2ray"
+else
+    BIN_DIR="$HOME/.local/bin"
+    SHARE_DIR="$HOME/.local/share/v2ray"
+    ETC_DIR="$HOME/.config/v2ray"
+    LOG_DIR="$HOME/.config/v2ray"
+fi
+
+CONFIG_FILE="$ETC_DIR/config.json"
+LOG_FILE="$LOG_DIR/v2ray.log"
 
 show_help() {
-    echo -e "${BLUE}V2Ray 管理命令${NC}"
+    echo -e "${BLUE}V2RayC - 服务器翻墙工具${NC}"
     echo ""
     echo "用法: v2rayc <命令>"
     echo ""
-    echo -e "  ${GREEN}start${NC}      启动 V2Ray"
-    echo -e "  ${GREEN}stop${NC}       停止 V2Ray"
-    echo -e "  ${GREEN}status${NC}     查看状态"
-    echo -e "  ${GREEN}test${NC}       测试连接"
-    echo -e "  ${GREEN}config${NC}     编辑配置"
-    echo -e "  ${GREEN}on${NC}         开启 HTTP 代理（当前终端）"
-    echo -e "  ${GREEN}off${NC}        关闭 HTTP 代理"
-    echo -e "  ${GREEN}uninstall${NC}  卸载 V2Ray"
-    echo -e "  ${GREEN}help${NC}       显示帮助"
+    echo "命令:"
+    echo -e "  ${GREEN}start${NC}        启动 V2Ray"
+    echo -e "  ${GREEN}stop${NC}         停止 V2Ray"
+    echo -e "  ${GREEN}status${NC}       查看状态"
+    echo -e "  ${GREEN}test${NC}         测试连接"
+    echo -e "  ${GREEN}config${NC}       编辑配置"
+    echo -e "  ${GREEN}on${NC}           开启代理（当前终端）"
+    echo -e "  ${GREEN}off${NC}          关闭代理"
+    echo -e "  ${GREEN}docker-build${NC}  Docker 构建使用代理"
+    echo -e "  ${GREEN}uninstall${NC}    卸载 V2Ray"
+    echo -e "  ${GREEN}help${NC}         显示帮助"
 }
 
 stop_v2ray() {
@@ -127,14 +170,6 @@ stop_v2ray() {
     else
         echo -e "${YELLOW}V2Ray 未运行${NC}"
     fi
-}
-
-uninstall_v2ray() {
-    echo -e "${YELLOW}正在卸载 V2Ray...${NC}"
-    stop_v2ray
-    rm -f "$HOME/.local/bin/v2ray" "$HOME/.local/bin/v2rayc"
-    rm -rf "$HOME/.config/v2ray"
-    echo -e "${GREEN}✓ V2Ray 已卸载${NC}"
 }
 
 start_v2ray() {
@@ -149,7 +184,7 @@ start_v2ray() {
         return
     fi
 
-    nohup "$V2RAY_BIN" run -config "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
+    nohup "$BIN_DIR/v2ray" run -config "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
     sleep 2
 
     if pgrep -x "v2ray" > /dev/null; then
@@ -165,14 +200,42 @@ start_v2ray() {
 proxy_on() {
     export http_proxy=http://127.0.0.1:1081
     export https_proxy=http://127.0.0.1:1081
-    echo -e "${GREEN}✓ HTTP 代理已开启（仅当前终端）${NC}"
-    echo "  http_proxy=$http_proxy"
-    echo "  https_proxy=$https_proxy"
+    export HTTP_PROXY=http://127.0.0.1:1081
+    export HTTPS_PROXY=http://127.0.0.1:1081
+    echo -e "${GREEN}✓ 代理已开启${NC}"
 }
 
 proxy_off() {
-    unset http_proxy https_proxy
-    echo -e "${GREEN}✓ HTTP 代理已关闭${NC}"
+    unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+    echo -e "${GREEN}✓ 代理已关闭${NC}"
+}
+
+uninstall_v2ray() {
+    echo -e "${YELLOW}正在卸载 V2Ray...${NC}"
+    stop_v2ray
+    rm -f "$BIN_DIR/v2ray" "$BIN_DIR/v2rayc"
+    rm -rf "$SHARE_DIR" "$ETC_DIR"
+    echo -e "${GREEN}✓ V2Ray 已卸载${NC}"
+}
+
+docker_build() {
+    HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}')
+    if [[ -z "$HOST_IP" ]]; then
+        HOST_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '^127\.' | head -n1)
+    fi
+
+    if [[ -z "$HOST_IP" ]]; then
+        echo -e "${RED}错误: 无法获取宿主机 IP${NC}"
+        exit 1
+    fi
+
+    echo -e "${BLUE}Docker 构建（使用代理）${NC}"
+    echo -e "宿主机 IP: ${GREEN}$HOST_IP${NC}"
+    echo ""
+
+    HTTP_PROXY="http://$HOST_IP:1081" \
+    HTTPS_PROXY="http://$HOST_IP:1081" \
+    docker compose "$@" build
 }
 
 case "${1:-help}" in
@@ -187,9 +250,6 @@ case "${1:-help}" in
         ;;
     off)
         proxy_off
-        ;;
-    uninstall)
-        uninstall_v2ray
         ;;
     status)
         if pgrep -x "v2ray" > /dev/null; then
@@ -207,8 +267,15 @@ case "${1:-help}" in
         fi
         ;;
     config)
-        mkdir -p "$HOME/.config/v2ray"
+        mkdir -p "$ETC_DIR"
         ${EDITOR:-nano} "$CONFIG_FILE"
+        ;;
+    docker-build)
+        shift
+        docker_build "$@"
+        ;;
+    uninstall)
+        uninstall_v2ray
         ;;
     help|--help|-h)
         show_help
@@ -221,56 +288,25 @@ case "${1:-help}" in
 esac
 V2RAYC_EOF
 
-chmod +x "$HOME/.local/bin/v2rayc"
-
+chmod +x "$BIN_DIR/v2rayc"
 echo -e "${GREEN}✓ v2rayc 命令已创建${NC}"
+
 echo ""
 
-# 4. 下载预设配置
-echo -e "${GREEN}[4/4] 下载配置...${NC}"
-mkdir -p "$HOME/.config/v2ray"
+# 步骤 4: 配置
+echo -e "${BLUE}[4/4] 配置...${NC}"
 
-# 下载 geoip 和 geosite
-curl -fsSL -o "$HOME/.config/v2ray/geoip.dat" "${DOWNLOAD_BASE}/data/geoip.dat" 2>/dev/null || true
-curl -fsSL -o "$HOME/.config/v2ray/geosite.dat" "${DOWNLOAD_BASE}/data/geosite.dat" 2>/dev/null || true
-
-# 创建符号链接让 V2Ray 能找到 geo 数据
-ln -sf "$HOME/.config/v2ray/geoip.dat" "$HOME/.local/bin/geoip.dat" 2>/dev/null || true
-ln -sf "$HOME/.config/v2ray/geosite.dat" "$HOME/.local/bin/geosite.dat" 2>/dev/null || true
-
-# 下载预设配置（如果没有的话）
-if [ ! -f "$HOME/.config/v2ray/config.json" ]; then
-    echo -e "${YELLOW}配置文件不存在，创建默认配置...${NC}"
-    tee "$HOME/.config/v2ray/config.json" > /dev/null << 'CONFIG_EOF'
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo -e "${YELLOW}创建默认配置...${NC}"
+    mkdir -p "$ETC_DIR"
+    cat > "$CONFIG_FILE" << 'CONFIG_EOF'
 {
   "inbounds": [
-    {
-      "port": 1080,
-      "listen": "0.0.0.0",
-      "protocol": "socks",
-      "settings": {"udp": true}
-    },
-    {
-      "port": 1081,
-      "listen": "0.0.0.0",
-      "protocol": "http"
-    }
+    {"port": 1080, "listen": "0.0.0.0", "protocol": "socks", "settings": {"udp": true}},
+    {"port": 1081, "listen": "0.0.0.0", "protocol": "http"}
   ],
   "outbounds": [
-    {
-      "protocol": "vmess",
-      "settings": {
-        "vnext": [
-          {
-            "address": "74.48.78.190",
-            "port": 9417,
-            "users": [{"id": "504a8d6b-d8bc-49a5-a611-94eb0b9d9037", "alterId": 0, "security": "auto"}]
-          }
-        ]
-      },
-      "streamSettings": {"network": "kcp", "kcpSettings": {"mtu": 1350, "tti": 50, "uplinkCapacity": 12, "downlinkCapacity": 100, "congestion": false, "readBufferSize": 2, "writeBufferSize": 2, "header": {"type": "wechat-video"}}},
-      "tag": "proxy"
-    },
+    {"protocol": "vmess", "settings": {"vnext": [{"address": "YOUR_IP", "port": YOUR_PORT, "users": [{"id": "YOUR_UUID", "alterId": 0}]}]}, "streamSettings": {"network": "tcp"}, "tag": "proxy"},
     {"protocol": "freedom", "tag": "direct"}
   ],
   "routing": {
@@ -288,26 +324,29 @@ else
 fi
 
 echo ""
-echo -e "${GREEN}=== 安装完成 ===${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}V2RayC 安装成功！${NC}"
+echo -e "${GREEN}========================================${NC}"
 echo ""
 
-# 添加 PATH 配置
-BASHRC_LINE='export PATH="$HOME/.local/bin:$PATH"'
-if ! grep -q "\.local/bin" ~/.bashrc 2>/dev/null; then
+# 添加到 PATH
+BASHRC_LINE="export PATH=\"$BIN_DIR:\$PATH\""
+if ! grep -q "$BIN_DIR" ~/.bashrc 2>/dev/null; then
     echo "$BASHRC_LINE" >> ~/.bashrc
-    echo -e "${YELLOW}已添加 ~/.local/bin 到 PATH${NC}"
-    echo -e "运行: source ~/.bashrc 或重新登录终端"
+    echo -e "${YELLOW}已添加 $BIN_DIR 到 PATH${NC}"
+    echo -e "${YELLOW}运行: source ~/.bashrc${NC}"
 fi
 
 echo ""
 echo "管理命令："
-echo "  v2rayc start    # 启动 V2Ray"
-echo "  v2rayc stop     # 停止 V2Ray"
-echo "  v2rayc status   # 查看状态"
-echo "  v2rayc test     # 测试连接"
-echo "  v2rayc config   # 编辑配置"
-echo "  v2rayc on       # 开启 HTTP 代理（当前终端）"
-echo "  v2rayc off      # 关闭 HTTP 代理"
+echo "  v2rayc start        # 启动 V2Ray"
+echo "  v2rayc stop         # 停止 V2Ray"
+echo "  v2rayc status       # 查看状态"
+echo "  v2rayc test         # 测试连接"
+echo "  v2rayc config       # 编辑配置"
+echo "  v2rayc on           # 开启代理（当前终端）"
+echo "  v2rayc off          # 关闭代理"
+echo "  v2rayc docker-build # Docker 构建使用代理"
 echo ""
-echo -e "${YELLOW}首次使用请先配置节点: v2rayc config${NC}"
+echo -e "${YELLOW}配置文件: $CONFIG_FILE${NC}"
 echo ""
