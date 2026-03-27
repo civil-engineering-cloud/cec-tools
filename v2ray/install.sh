@@ -234,6 +234,10 @@ mkdir -p "$HOME/.config/v2ray"
 curl -fsSL -o "$HOME/.config/v2ray/geoip.dat" "${DOWNLOAD_BASE}/data/geoip.dat" 2>/dev/null || true
 curl -fsSL -o "$HOME/.config/v2ray/geosite.dat" "${DOWNLOAD_BASE}/data/geosite.dat" 2>/dev/null || true
 
+# 创建符号链接让 V2Ray 能找到 geo 数据
+ln -sf "$HOME/.config/v2ray/geoip.dat" "$HOME/.local/bin/geoip.dat" 2>/dev/null || true
+ln -sf "$HOME/.config/v2ray/geosite.dat" "$HOME/.local/bin/geosite.dat" 2>/dev/null || true
+
 # 下载预设配置（如果没有的话）
 if [ ! -f "$HOME/.config/v2ray/config.json" ]; then
     echo -e "${YELLOW}配置文件不存在，创建默认配置...${NC}"
@@ -286,18 +290,24 @@ fi
 echo ""
 echo -e "${GREEN}=== 安装完成 ===${NC}"
 echo ""
+
+# 添加 PATH 配置
+BASHRC_LINE='export PATH="$HOME/.local/bin:$PATH"'
+if ! grep -q "\.local/bin" ~/.bashrc 2>/dev/null; then
+    echo "$BASHRC_LINE" >> ~/.bashrc
+    echo -e "${YELLOW}已添加 ~/.local/bin 到 PATH${NC}"
+    echo -e "运行: source ~/.bashrc 或重新登录终端"
+fi
+
+echo ""
 echo "管理命令："
-echo "  ~/.local/bin/v2rayc start    # 启动 V2Ray"
-echo "  ~/.local/bin/v2rayc stop     # 停止 V2Ray"
-echo "  ~/.local/bin/v2rayc status   # 查看状态"
-echo "  ~/.local/bin/v2rayc test     # 测试连接"
-echo "  ~/.local/bin/v2rayc config   # 编辑配置"
-echo "  ~/.local/bin/v2rayc on       # 开启 HTTP 代理（当前终端）"
-echo "  ~/.local/bin/v2rayc off      # 关闭 HTTP 代理"
+echo "  v2rayc start    # 启动 V2Ray"
+echo "  v2rayc stop     # 停止 V2Ray"
+echo "  v2rayc status   # 查看状态"
+echo "  v2rayc test     # 测试连接"
+echo "  v2rayc config   # 编辑配置"
+echo "  v2rayc on       # 开启 HTTP 代理（当前终端）"
+echo "  v2rayc off      # 关闭 HTTP 代理"
 echo ""
-echo -e "${YELLOW}提示: 安装目录 ~/.local/bin 已添加到 PATH${NC}"
-echo "新终端运行: source ~/.bashrc"
-echo "或直接使用完整路径: ~/.local/bin/v2rayc"
-echo ""
-echo -e "${YELLOW}首次使用请先配置节点: ~/.local/bin/v2rayc config${NC}"
+echo -e "${YELLOW}首次使用请先配置节点: v2rayc config${NC}"
 echo ""
